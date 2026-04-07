@@ -2,6 +2,17 @@ import { db } from '~~/server/utils/db';
 import { votes, voteOptions } from '~~/server/utils/schema';
 
 export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event);
+  if (!session.user) {
+    throw createError({ statusCode: 401, message: '로그인이 필요합니다.' });
+  }
+  const user = session.user as {
+    id: number;
+    email: string;
+    name: string;
+    role: 'ADMIN' | 'MEMBER';
+  };
+
   // Read data from client request
   const body = await readBody(event);
 
@@ -12,7 +23,7 @@ export default defineEventHandler(async (event) => {
       const [newVote] = await tx
         .insert(votes)
         .values({
-          creatorId: body.creatorId, // 나중엔 인증 토큰에서 빼오는 걸로 수정해야 함
+          creatorId: user.id, // 나중엔 인증 토큰에서 빼오는 걸로 수정해야 함
           title: body.title,
           description: body.description,
           isAnonymous: body.isAnonymous,
