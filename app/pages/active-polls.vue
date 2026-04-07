@@ -1,15 +1,6 @@
 <script lang="tsx" setup>
   import type { TableColumn } from '@nuxt/ui';
 
-  const UButton = resolveComponent('UButton');
-  const UBadge = resolveComponent('UBadge');
-  const UDropdownMenu = resolveComponent('UDropdownMenu');
-
-  const router = useRouter();
-
-  const { data: polls } = await useFetch('/api/polls/active');
-  console.log('Fetched active polls:', polls.value);
-
   type Poll = {
     id: number;
     title: string;
@@ -22,6 +13,12 @@
     isClosed: boolean;
     createdAt: string;
   };
+
+  const UButton = resolveComponent('UButton');
+  const UBadge = resolveComponent('UBadge');
+  const UDropdownMenu = resolveComponent('UDropdownMenu');
+
+  const router = useRouter();
 
   const columns: TableColumn<Poll>[] = [
     {
@@ -158,8 +155,9 @@
     },
   ];
 
-  const activePolls = computed<Poll[]>(() => {
-    return (polls.value as Poll[]) || [];
+  const { data: polls, pending } = useFetch<Poll[]>('/api/polls/active', {
+    lazy: true, // 이게 핵심! 페이지 이동을 막지 않고 백그라운드에서 fetch함
+    default: () => [], // fetch가 완료되기 전까지 들어있을 기본값 (빈 배열)
   });
 
   const table = useTemplateRef('table');
@@ -178,7 +176,7 @@
         />
       </div>
 
-      <UTable ref="table" :data="activePolls" :columns="columns" sticky class="h-96">
+      <UTable ref="table" :data="polls" :columns="columns" :loading="pending" sticky class="h-96">
         <template #expanded="{ row }">
           <pre>{{ row.original }}</pre>
         </template>

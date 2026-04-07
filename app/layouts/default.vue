@@ -9,7 +9,7 @@
     },
     {
       label: 'Active Polls',
-      icon: 'i-lucide-poll',
+      icon: 'i-lucide-vote',
       to: '/active-polls',
     },
     {
@@ -63,17 +63,22 @@
           orientation="vertical"
           :items="navItems"
           :ui="{
-            link: 'p-1.5 overflow-hidden',
+            link: 'px-2 py-4 overflow-hidden',
           }"
         />
       </template>
       <template #footer>
-        <UButton
-          label="Create Poll"
-          icon="i-lucide-message-square-plus"
-          variant="solid"
-          class="from-primary-300 to-primary-500 mb-16 w-full items-center justify-center bg-linear-to-r py-4"
-        />
+        <NuxtLink
+          to="/poll/new"
+          class="focus:ring-primary mb-16 w-full rounded-lg focus:ring-2 focus:ring-offset-2 focus:outline-none"
+        >
+          <UButton
+            label="Create Poll"
+            icon="i-lucide-message-square-plus"
+            variant="solid"
+            class="from-primary-300 to-primary-500 w-full items-center justify-center bg-linear-to-r py-4"
+          />
+        </NuxtLink>
       </template>
     </USidebar>
     <div class="flex grow flex-col overflow-y-auto">
@@ -95,7 +100,7 @@
             <UButton
               color="neutral"
               variant="ghost"
-              to="https://github.com/team-croffle/croffle-poll"
+              to="https://github.com/team-croffle/croffle-poll/releases"
               target="_blank"
               icon="i-simple-icons-github"
               aria-label="GitHub"
@@ -115,26 +120,10 @@
 
         <template #right>
           <UButton
-            icon="i-simple-icons-discord"
-            color="neutral"
-            variant="ghost"
-            to="https://go.nuxt.com/discord"
-            target="_blank"
-            aria-label="Discord"
-          />
-          <UButton
-            icon="i-simple-icons-x"
-            color="neutral"
-            variant="ghost"
-            to="https://go.nuxt.com/x"
-            target="_blank"
-            aria-label="X"
-          />
-          <UButton
             icon="i-simple-icons-github"
             color="neutral"
             variant="ghost"
-            to="https://github.com/nuxt/nuxt"
+            to="https://github.com/team-croffle/croffle-poll"
             target="_blank"
             aria-label="GitHub"
           />
