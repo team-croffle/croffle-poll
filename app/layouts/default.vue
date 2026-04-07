@@ -1,16 +1,16 @@
 <script setup lang="ts">
   import type { NavigationMenuItem } from '@nuxt/ui';
 
-  const items: NavigationMenuItem[] = [
+  const navItems: NavigationMenuItem[] = [
     {
       label: 'Home',
       icon: 'i-lucide-house',
       to: '/',
     },
     {
-      label: 'Active Votes',
-      icon: 'i-lucide-vote',
-      to: '/active-votes',
+      label: 'Active Polls',
+      icon: 'i-lucide-poll',
+      to: '/active-polls',
     },
     {
       label: 'History',
@@ -21,6 +21,19 @@
       label: 'Team',
       icon: 'i-lucide-users',
       to: '/team',
+    },
+  ];
+
+  const footerItems: NavigationMenuItem[] = [
+    {
+      label: 'BlueNyang',
+      to: 'https://www.bluenyang.kr',
+      target: '_blank',
+    },
+    {
+      label: 'Releases',
+      to: 'https://github.com/team-croffle/croffle-poll/releases',
+      target: '_blank',
     },
   ];
 </script>
@@ -48,7 +61,7 @@
       <template #default>
         <UNavigationMenu
           orientation="vertical"
-          :items="items"
+          :items="navItems"
           :ui="{
             link: 'p-1.5 overflow-hidden',
           }"
@@ -56,14 +69,14 @@
       </template>
       <template #footer>
         <UButton
-          label="Create Vote"
+          label="Create Poll"
           icon="i-lucide-message-square-plus"
           variant="solid"
           class="from-primary-300 to-primary-500 mb-16 w-full items-center justify-center bg-linear-to-r py-4"
         />
       </template>
     </USidebar>
-    <div class="grow overflow-y-auto">
+    <div class="flex grow flex-col overflow-y-auto">
       <UHeader
         :ui="{
           container: 'mx-8 max-w-[90%]',
@@ -73,7 +86,7 @@
           <NuxtLink to="/" class="flex flex-row items-center gap-2 focus:outline-none">
             <p class="text-2xl font-bold">
               <span>Croffle Dev. </span>
-              <span class="text-primary">Vote Platform</span>
+              <span class="text-primary">Poll Platform</span>
             </p>
           </NuxtLink>
         </template>
@@ -82,7 +95,7 @@
             <UButton
               color="neutral"
               variant="ghost"
-              to="https://github.com/team-croffle/croffle-vote"
+              to="https://github.com/team-croffle/croffle-poll"
               target="_blank"
               icon="i-simple-icons-github"
               aria-label="GitHub"
@@ -91,6 +104,42 @@
         </template>
       </UHeader>
       <slot />
+      <UFooter>
+        <template #left>
+          <p class="text-muted text-sm">
+            © {{ new Date().getFullYear() }} BlueNyang. All rights reserved.
+          </p>
+        </template>
+
+        <UNavigationMenu :items="footerItems" variant="link" />
+
+        <template #right>
+          <UButton
+            icon="i-simple-icons-discord"
+            color="neutral"
+            variant="ghost"
+            to="https://go.nuxt.com/discord"
+            target="_blank"
+            aria-label="Discord"
+          />
+          <UButton
+            icon="i-simple-icons-x"
+            color="neutral"
+            variant="ghost"
+            to="https://go.nuxt.com/x"
+            target="_blank"
+            aria-label="X"
+          />
+          <UButton
+            icon="i-simple-icons-github"
+            color="neutral"
+            variant="ghost"
+            to="https://github.com/nuxt/nuxt"
+            target="_blank"
+            aria-label="GitHub"
+          />
+        </template>
+      </UFooter>
     </div>
   </div>
 </template>

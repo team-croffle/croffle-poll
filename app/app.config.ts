@@ -1,5 +1,5 @@
 export default defineAppConfig({
-  title: 'Croffle Dev. Vote',
+  title: 'Croffle Dev. Poll Platform',
   theme: {
     dark: true,
   },

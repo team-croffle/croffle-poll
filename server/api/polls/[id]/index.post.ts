@@ -1,9 +1,9 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/utils/db';
-import { voteOptions, voteResponses } from '~~/server/utils/schema';
+import { pollOptions, pollResponses } from '~~/server/utils/schema';
 
 export default defineEventHandler(async (event) => {
-  const voteId = Number(event.context.params?.id);
+  const pollId = Number(event.context.params?.id);
   const body = await readBody(event);
 
   return await db.transaction(async (tx) => {
@@ -23,16 +23,16 @@ export default defineEventHandler(async (event) => {
     if (body.customOptionValue) {
       const [existingOption] = await tx
         .select()
-        .from(voteOptions)
-        .where(and(eq(voteOptions.voteId, voteId), eq(voteOptions.value, body.customOptionValue)));
+        .from(pollOptions)
+        .where(and(eq(pollOptions.pollId, pollId), eq(pollOptions.value, body.customOptionValue)));
 
       if (existingOption) {
         customOptionId = existingOption.id; // 이미 존재하는 항목이면 그걸 사용
       } else {
         const [newOption] = await tx
-          .insert(voteOptions)
+          .insert(pollOptions)
           .values({
-            voteId,
+            pollId,
             value: body.customOptionValue,
             createdBy: body.userId, // 누가 추가한 항목인지 기록
           })
@@ -51,25 +51,25 @@ export default defineEventHandler(async (event) => {
     if (customOptionId) targetOptionIds.push(customOptionId);
 
     // 투표 응답 인서트
-    // TODO: 중복 투표 방지 로직 (이미 이 voteId와 userId로 기록이 있는지 체크) 추가 필요
+    // TODO: 중복 투표 방지 로직 (이미 이 pollId와 userId로 기록이 있는지 체크) 추가 필요
     if (targetOptionIds.length > 0) {
-      const existingVotes = await tx
+      const existingPolls = await tx
         .select()
-        .from(voteResponses)
-        .where(and(eq(voteResponses.voteId, voteId), eq(voteResponses.userId, userId)));
+        .from(pollResponses)
+        .where(and(eq(pollResponses.pollId, pollId), eq(pollResponses.userId, userId)));
 
-      const votedOptionIds = existingVotes.map((v) => v.optionId);
+      const polldOptionIds = existingPolls.map((v) => v.optionId);
 
       const newResponsesToInsert = targetOptionIds
-        .filter((optId: number) => !votedOptionIds.includes(optId))
+        .filter((optId: number) => !polldOptionIds.includes(optId))
         .map((optId: number) => ({
-          voteId,
+          pollId,
           optionId: optId,
           userId: body.userId,
         }));
 
       if (newResponsesToInsert.length > 0) {
-        await tx.insert(voteResponses).values(newResponsesToInsert);
+        await tx.insert(pollResponses).values(newResponsesToInsert);
       }
     }
 

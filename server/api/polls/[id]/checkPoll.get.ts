@@ -1,7 +1,8 @@
 import { and, eq } from 'drizzle-orm';
+import { pollResponses } from '~~/server/utils/schema';
 
 export default defineEventHandler(async (event) => {
-  const voteId = Number(event.context.params?.id);
+  const pollId = Number(event.context.params?.id);
 
   return await db.transaction(async (tx) => {
     const session = await getUserSession(event);
@@ -14,11 +15,11 @@ export default defineEventHandler(async (event) => {
     };
     const userId = user.id;
 
-    const existingVotes = await tx
+    const existingPolls = await tx
       .select()
-      .from(voteResponses)
-      .where(and(eq(voteResponses.voteId, voteId), eq(voteResponses.userId, userId)));
+      .from(pollResponses)
+      .where(and(eq(pollResponses.pollId, pollId), eq(pollResponses.userId, userId)));
 
-    return { hasVoted: existingVotes.length > 0 };
+    return { hasPolld: existingPolls.length > 0 };
   });
 });

@@ -1,5 +1,5 @@
 import { db } from '~~/server/utils/db';
-import { votes, voteOptions } from '~~/server/utils/schema';
+import { polls, pollOptions } from '~~/server/utils/schema';
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event);
@@ -19,9 +19,9 @@ export default defineEventHandler(async (event) => {
   try {
     // Start Transaction: All operations inside must succeed for any to be committed to the DB
     const result = await db.transaction(async (tx) => {
-      // Insert the main vote data and get the newly created vote record back
-      const [newVote] = await tx
-        .insert(votes)
+      // Insert the main poll data and get the newly created poll record back
+      const [newPoll] = await tx
+        .insert(polls)
         .values({
           creatorId: user.id, // 나중엔 인증 토큰에서 빼오는 걸로 수정해야 함
           title: body.title,
@@ -33,23 +33,23 @@ export default defineEventHandler(async (event) => {
         })
         .returning();
 
-      if (!newVote) {
+      if (!newPoll) {
         throw new Error('투표 생성 실패');
       }
 
       // 투표 항목 인서트 (옵션이 배열로 들어왔을 경우)
       if (body.options && body.options.length > 0) {
         const optionsToInsert = body.options.map((opt: string) => ({
-          voteId: newVote.id,
+          pollId: newPoll.id,
           value: opt,
         }));
-        await tx.insert(voteOptions).values(optionsToInsert);
+        await tx.insert(pollOptions).values(optionsToInsert);
       }
 
-      return newVote;
+      return newPoll;
     });
 
-    return { success: true, vote: result };
+    return { success: true, poll: result };
   } catch {
     throw createError({ statusCode: 500, statusMessage: '투표 생성 실패' });
   }

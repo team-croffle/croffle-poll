@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '~~/server/utils/db';
-import { votes } from '~~/server/utils/schema';
+import { polls } from '~~/server/utils/schema';
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event);
@@ -17,12 +17,12 @@ export default defineEventHandler(async (event) => {
 
   // 작성자 본인인지 확인하기 위해 조건에 creatorId 추가
   const result = await db
-    .update(votes)
+    .update(polls)
     .set({ isClosed: true })
     .where(
       and(
-        eq(votes.id, pollId),
-        eq(votes.creatorId, user.id) // 내 투표만 마감할 수 있음
+        eq(polls.id, pollId),
+        eq(polls.creatorId, user.id) // 내 투표만 마감할 수 있음
       )
     )
     .returning();

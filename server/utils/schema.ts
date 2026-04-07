@@ -10,8 +10,8 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// 투표 메인 (Votes)
-export const votes = pgTable('votes', {
+// 투표 메인 (Polls)
+export const polls = pgTable('polls', {
   id: serial('id').primaryKey(),
   creatorId: integer('creator_id')
     .references(() => users.id)
@@ -31,11 +31,11 @@ export const votes = pgTable('votes', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// 투표 항목 (Vote Options)
-export const voteOptions = pgTable('vote_options', {
+// 투표 항목 (Poll Options)
+export const pollOptions = pgTable('poll_options', {
   id: serial('id').primaryKey(),
-  voteId: integer('vote_id')
-    .references(() => votes.id, { onDelete: 'cascade' })
+  pollId: integer('poll_id')
+    .references(() => polls.id, { onDelete: 'cascade' })
     .notNull(),
 
   // 항목 작성자 (관리자가 미리 만들어둔 건 null, '직접 항목 작성'으로 유저가 추가한 건 userId)
@@ -45,14 +45,14 @@ export const voteOptions = pgTable('vote_options', {
   value: text('value').notNull(),
 });
 
-// 투표 참여 결과 (Vote Responses)
-export const voteResponses = pgTable('vote_responses', {
+// 투표 참여 결과 (Poll Responses)
+export const pollResponses = pgTable('poll_responses', {
   id: serial('id').primaryKey(),
-  voteId: integer('vote_id')
-    .references(() => votes.id, { onDelete: 'cascade' })
+  pollId: integer('poll_id')
+    .references(() => polls.id, { onDelete: 'cascade' })
     .notNull(),
   optionId: integer('option_id')
-    .references(() => voteOptions.id, { onDelete: 'cascade' })
+    .references(() => pollOptions.id, { onDelete: 'cascade' })
     .notNull(),
 
   // 무기명 투표라도 '중복 투표 방지'를 위해 DB에는 반드시 유저 정보를 남겨야 함.

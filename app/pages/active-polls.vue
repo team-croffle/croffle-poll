@@ -7,10 +7,10 @@
 
   const router = useRouter();
 
-  const { data: votes } = await useFetch('/api/votes/active');
-  console.log('Fetched active votes:', votes.value);
+  const { data: polls } = await useFetch('/api/polls/active');
+  console.log('Fetched active polls:', polls.value);
 
-  type Vote = {
+  type Poll = {
     id: number;
     title: string;
     description: string;
@@ -23,7 +23,7 @@
     createdAt: string;
   };
 
-  const columns: TableColumn<Vote>[] = [
+  const columns: TableColumn<Poll>[] = [
     {
       accessorKey: 'id',
       header: '#',
@@ -132,7 +132,7 @@
           {
             label: 'Go to details',
             onSelect() {
-              router.push(`/votes/${row.original.id}`);
+              router.push(`/polls/${row.original.id}`);
             },
           },
         ];
@@ -158,8 +158,8 @@
     },
   ];
 
-  const activeVotes = computed<Vote[]>(() => {
-    return (votes.value as Vote[]) || [];
+  const activePolls = computed<Poll[]>(() => {
+    return (polls.value as Poll[]) || [];
   });
 
   const table = useTemplateRef('table');
@@ -178,14 +178,14 @@
         />
       </div>
 
-      <UTable ref="table" :data="activeVotes" :columns="columns" sticky class="h-96">
+      <UTable ref="table" :data="activePolls" :columns="columns" sticky class="h-96">
         <template #expanded="{ row }">
           <pre>{{ row.original }}</pre>
         </template>
       </UTable>
 
       <div class="text-muted px-4 py-3.5 text-sm">
-        {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} active vote(s) found.
+        {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} active poll(s) found.
       </div>
     </div>
   </div>
