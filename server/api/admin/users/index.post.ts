@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: '팀장만 계정을 생성할 수 있습니다.' });
   }
 
-  const { email, password, name } = await readBody(event);
+  const { email, password, name, role } = await readBody(event);
 
   const hashedPassword = await hashPassword(password);
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     email,
     name,
     passwordHash: hashedPassword,
-    role: 'MEMBER',
+    role,
   });
 
   return { success: true };

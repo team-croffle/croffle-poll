@@ -1,0 +1,19 @@
+import { asc } from 'drizzle-orm';
+
+export default defineEventHandler(async (event) => {
+  const session = await getUserSession(event);
+  if (!session.user) throw createError({ statusCode: 401 });
+
+  const user = session.user as {
+    id: number;
+    email: string;
+    name: string;
+    role: 'ADMIN' | 'MEMBER';
+  };
+
+  if (user.role !== 'ADMIN') throw createError({ statusCode: 403 });
+
+  const allUsers = await db.select().from(users).orderBy(asc(users.id));
+
+  return allUsers;
+});
