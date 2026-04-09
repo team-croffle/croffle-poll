@@ -14,18 +14,6 @@ export default withNuxt(
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-      'unicorn/filename-case': [
-        'error',
-        {
-          cases: {
-            pascalCase: true,
-            camelCase: true,
-          },
-          ignore: [
-            /.*~\d{8}-\d{6}\..*$/, // Syncthing
-          ],
-        },
-      ],
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/no-null': 'off',
       'unicorn/prefer-top-level-await': 'off',

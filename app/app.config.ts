@@ -1,14 +1,13 @@
 export default defineAppConfig({
-  title: 'Croffle Dev. Vote',
+  title: 'Croffle Dev. Poll Platform',
   theme: {
     dark: true,
   },
   ui: {
     colors: {
       primary: 'cyan',
-      secondary: 'slate',
+      secondary: 'emerald',
       neutral: 'gray',
-      tertiary: 'emerald',
     },
   },
 });
