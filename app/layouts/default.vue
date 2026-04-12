@@ -31,6 +31,29 @@
     },
   ];
 
+  const headerNavItems: NavigationMenuItem[][] = [
+    navItems,
+    [
+      {
+        label: 'Create Poll',
+        icon: 'i-lucide-message-square-plus',
+        to: '/poll/new',
+      },
+    ],
+    [
+      {
+        label: 'Github',
+        icon: 'i-simple-icons-github',
+        to: 'https://github.com/team-croffle/croffle-poll',
+      },
+      {
+        label: 'Logout',
+        icon: 'i-lucide-log-out',
+        onSelect: onLogout,
+      },
+    ],
+  ];
+
   const profileItems: DropdownMenuItem[] = [
     {
       type: 'label',
@@ -87,7 +110,7 @@
   <div :class="{ dark: true }" class="flex h-screen flex-row">
     <USidebar
       class="border-default flex h-full shrink-0 flex-col border-r"
-      collapsible="none"
+      collapsible="offcanvas"
       side="left"
       variant="sidebar"
       :ui="{
@@ -139,7 +162,7 @@
         mode="slideover"
         toggle-side="left"
         :ui="{
-          container: 'mx-8 max-w-[90%]',
+          container: 'mx-0 items-center sm:mx-8 sm:max-w-[90%]',
         }"
       >
         <template #title>
@@ -152,7 +175,7 @@
           </div>
         </template>
         <template #right>
-          <div class="flex flex-row items-center gap-2">
+          <div class="hidden flex-row items-center gap-2 sm:flex">
             <!-- GitHub Link -->
             <UTooltip text="Go to GitHub">
               <UButton
@@ -195,7 +218,7 @@
         </template>
 
         <template #body>
-          <UNavigationMenu :items="navItems" orientation="vertical" class="-mx-2.5" />
+          <UNavigationMenu :items="headerNavItems" orientation="vertical" class="-mx-2.5" />
         </template>
       </UHeader>
       <div class="mx-8 mt-4 max-w-[90%] grow flex-col gap-4">
