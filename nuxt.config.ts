@@ -14,9 +14,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL,
-    public: {
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_KEY,
+    initAdmin: {
+      username: process.env.INIT_ADMIN_USERNAME,
+      password: process.env.INIT_ADMIN_PASSWORD,
     },
   },
   routeRules: {
