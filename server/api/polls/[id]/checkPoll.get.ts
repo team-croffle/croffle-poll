@@ -1,25 +1,19 @@
 import { and, eq } from 'drizzle-orm';
-import { pollResponses } from '~~/server/utils/schema';
 
 export default defineEventHandler(async (event) => {
-  const pollId = Number(event.context.params?.id);
+  const pollId = event.context.params?.id;
+  if (!pollId) throw createError({ statusCode: 400, message: '투표 ID가 필요합니다.' });
+
+  const session = await getUserSession(event);
+
+  if (!session.user) throw createError({ statusCode: 401 });
 
   return await db.transaction(async (tx) => {
-    const session = await getUserSession(event);
-    if (!session.user) throw createError({ statusCode: 401 });
-    const user = session.user as {
-      id: number;
-      email: string;
-      name: string;
-      role: 'ADMIN' | 'MEMBER';
-    };
-    const userId = user.id;
+    const pollResponseExsting = await tx.query.pollSubmissions.findFirst({
+      where: (pollSubmissions, { and, eq }) =>
+        and(eq(pollSubmissions.pollId, pollId), eq(pollSubmissions.userId, session.user!.id)),
+    });
 
-    const existingPolls = await tx
-      .select()
-      .from(pollResponses)
-      .where(and(eq(pollResponses.pollId, pollId), eq(pollResponses.userId, userId)));
-
-    return { hasPolld: existingPolls.length > 0 };
+    return { hasSubmited: !!pollResponseExsting };
   });
 });
