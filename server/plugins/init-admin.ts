@@ -1,0 +1,44 @@
+import { eq } from 'drizzle-orm';
+import { consola } from 'consola';
+import { users } from '../utils/schema/users';
+import { db } from '../utils/db';
+
+export default defineNitroPlugin(async () => {
+  const logger = consola.withTag('init-admin');
+
+  logger.info('Checking initial Admin account via Drizzle...');
+
+  try {
+    const existingAdmin = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.role, 'ADMIN'))
+      .limit(1);
+
+    if (existingAdmin.length > 0) {
+      logger.info('Admin account already exists. Skipping initialization.');
+      return;
+    }
+
+    const config = useRuntimeConfig();
+    const { username, password } = config.initAdmin;
+
+    if (!username || !password) {
+      logger.warn('INIT_ADMIN_USERNAME or INIT_ADMIN_PASSWORD not set. Skipping initialization.');
+      return;
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    await db.insert(users).values({
+      loginId: username,
+      passwordHash: hashedPassword,
+      nickname: 'Admin',
+      role: 'ADMIN',
+    });
+
+    logger.info('Admin account created successfully.');
+  } catch (error) {
+    logger.error('Failed to initialize admin account:', error);
+  }
+});
