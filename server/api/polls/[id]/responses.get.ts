@@ -1,5 +1,5 @@
 import { db } from '~~/server/utils/db';
-import { pollResponses, users } from '~~/server/utils/schema';
+import { polls, pollOptions, users } from '~~/server/utils/schema';
 import { count, eq, sql } from 'drizzle-orm';
 
 type PollResponse = {
@@ -10,7 +10,11 @@ type PollResponse = {
 }[];
 
 export default defineEventHandler(async (event) => {
-  const pollId = Number(event.context.params?.id);
+  const pollId = event.context.params?.id;
+
+  if (!pollId) {
+    throw createError({ statusCode: 404, statusMessage: '투표를 찾을 수 없습니다.' });
+  }
 
   // 투표 기본 정보 조회
   const [poll] = await db
@@ -22,63 +26,118 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: '투표를 찾을 수 없습니다.' });
   }
 
+  // VOTE가 아닌 설문이나 의견 취합의 경우, 생성자 또는 관리자만 설문 결과를 볼 수 있음.
+  if (poll.polls.type !== 'VOTE') {
+    const session = await getUserSession(event);
+    if (!session.user) {
+      throw createError({ statusCode: 401 });
+    }
+    // 관리자 확인
+    if (session.user.role !== 'ADMIN' && poll.polls.creatorId !== session.user.id) {
+      throw createError({ statusCode: 403, statusMessage: '설문조사의 결과를 볼 수 없습니다.' });
+    }
+  }
+
+  // poll 기본 정보 포매팅
   const formattedPoll = {
     id: poll.polls.id,
     title: poll.polls.title,
     description: poll.polls.description,
     createdAt: poll.polls.createdAt,
-    creatorName: poll.users.name,
+    creatorName: poll.users.nickname,
     isAnonymous: poll.polls.isAnonymous,
     isMultipleChoice: poll.polls.isMultipleChoice,
     allowCustomOptions: poll.polls.allowCustomOptions,
-    optionType: poll.polls.optionType,
-    isClosed: poll.polls.isClosed,
+    type: poll.polls.type,
+    status: poll.polls.status,
+    closedAt: poll.polls.closedAt,
   };
 
-  const resps = await db
-    .select({
-      value: pollOptions.value,
-      count: count(pollResponses.id),
-      voters: sql<string[]>`array_agg(${users.name})`,
-    })
-    .from(pollResponses)
-    .innerJoin(users, eq(pollResponses.userId, users.id))
-    .innerJoin(pollOptions, eq(pollResponses.optionId, pollOptions.id))
-    .where(eq(pollResponses.pollId, pollId))
-    .groupBy(pollOptions.value);
+  // VOTE이면 투표 결과를 조회해야 함
+  // 근데 type이나 설정에 따라 응답을 다르게 반환해야 할 수도 있음.
+  if (poll.polls.type === 'VOTE') {
+    // 일단 투표 기록 조회
+    const rawResps = await db
+      .select({
+        optionId: pollOptions.id,
+        optionValue: pollOptions.content,
+        nickname: users.nickname,
+      })
+      .from(pollSubmissionOptions)
+      .leftJoin(pollOptions, eq(pollSubmissionOptions.optionId, pollOptions.id))
+      .leftJoin(users, eq(pollOptions.addedBy, users.id))
+      .where(eq(pollOptions.pollId, pollId));
 
-  // 무기명 투표 데이터 마스킹
-  if (poll.polls.isAnonymous) {
-    resps.forEach((response) => {
-      response.voters = Array(response.count).fill('Anonymous');
-    });
-  }
-
-  const totalVotes = resps.reduce((acc, response) => acc + response.count, 0);
-  const sortedResponses: PollResponse = resps
-    .sort((a, b) => b.count - a.count)
-    .map((r) => {
+    // 조회 결과 없으면 그냥 0 반환
+    if (!rawResps || rawResps.length === 0) {
       return {
-        ...r,
-        rank: 0,
+        ...formattedPoll,
+        totalVotes: 0,
+        submissions: [],
       };
+    }
+
+    const optionStats = new Map<string, { value: string; count: number; voters: string[] }>();
+
+    rawResps.forEach((row) => {
+      if (!row.optionId || !row.optionValue) return;
+
+      if (!optionStats.has(row.optionId)) {
+        optionStats.set(row.optionId, {
+          value: row.optionValue,
+          count: 0,
+          voters: [],
+        });
+      }
+
+      const stat = optionStats.get(row.optionId)!;
+      stat.count++;
+
+      if (poll.polls.isAnonymous) {
+        stat.voters.push('익명');
+      } else {
+        stat.voters.push(row.nickname || '알 수 없는 유저');
+      }
     });
 
-  let currentRank = 1;
-  sortedResponses.forEach((resp, index) => {
-    if (index > 0) {
-      const prevResp = sortedResponses[index - 1];
-      if (!prevResp) throw new Error('이전 응답을 찾을 수 없습니다.');
-      if (prevResp.count > resp.count) {
-        currentRank = index + 1;
-      }
-    }
-    resp.rank = currentRank;
-  });
+    const sortedResps = Array.from(optionStats.values())
+      .sort((a, b) => b.count - a.count)
+      .map((i) => ({ ...i, rank: 0 }));
 
-  return {
-    ...formattedPoll,
-    totalVotes,
-    votes: sortedResponses,
-  };
+    // 순위 매기기
+    let currentRank = 1;
+    let prevCount = -1;
+    sortedResps.forEach((resp, idx) => {
+      if (idx > 0 && resp.count < prevCount) {
+        currentRank = idx + 1;
+      }
+      resp.rank = currentRank;
+      prevCount = resp.count;
+    });
+
+    // 총 투표 수
+    const totalVotes = rawResps.length;
+
+    return {
+      ...formattedPoll,
+      totalVotes,
+      submissions: sortedResps,
+    };
+  } else {
+    // APPLICATION, OPINION의 경우, 누가, 어떤 내용을 답했는지만 보여주면 됨.
+    const submissions = await db
+      .select({
+        content: pollSubmissions.content,
+        nickname: users.nickname,
+      })
+      .from(pollSubmissions)
+      .leftJoin(users, eq(pollSubmissions.userId, users.id))
+      .where(eq(pollSubmissions.pollId, pollId));
+
+    return {
+      ...formattedPoll,
+      totalVotes: submissions.length,
+      submissions,
+    };
+  }
 });

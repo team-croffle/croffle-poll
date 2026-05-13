@@ -15,8 +15,8 @@ export const pollSubmissions = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    textContent: text('text_content'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    content: text('content'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (t) => [unique('poll_submission_poll_user_unq').on(t.pollId, t.userId)]
 );

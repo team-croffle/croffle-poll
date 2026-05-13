@@ -42,15 +42,15 @@ CREATE TABLE IF NOT EXISTS poll_options (
 CREATE TABLE IF NOT EXISTS poll_submissions (
   id UUID PRIMARY KEY,
   poll_id UUID NOT NULL REFERENCES polls(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  text_content TEXT,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  content TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 
   UNIQUE (poll_id, user_id)
 );
 
 -- Poll Submission Options Table (VOTE type)
-CREATE TABLE poll_submission_options (
+CREATE TABLE IF NOT EXISTS poll_submission_options (
   submission_id UUID NOT NULL REFERENCES poll_submissions(id) ON DELETE CASCADE,
   option_id UUID NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
   PRIMARY KEY (submission_id, option_id)
