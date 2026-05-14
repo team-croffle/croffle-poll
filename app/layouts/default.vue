@@ -1,10 +1,18 @@
 <script setup lang="ts">
-  import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui';
+  import type { NavigationMenuItem } from '@nuxt/ui';
+
   import EditPasswordModal from '~/components/modal/EditPasswordModal.vue';
 
   const { clear } = useUserSession();
   const toast = useToast();
   const colorMode = useColorMode();
+
+  const { session } = useUserSession();
+  const isAdmin = computed(() => {
+    if (!session.value) return false;
+    const { user } = session.value;
+    return user?.role === 'ADMIN';
+  });
 
   const isChangePasswordModalOpen = ref<boolean>(false);
 
@@ -26,11 +34,15 @@
         icon: 'i-lucide-history',
         to: '/history',
       },
-      {
-        label: 'Team',
-        icon: 'i-lucide-users',
-        to: '/team',
-      },
+      ...(isAdmin.value
+        ? [
+            {
+              label: 'Team',
+              icon: 'i-lucide-users',
+              to: '/team',
+            },
+          ]
+        : []),
     ],
     [
       {
@@ -38,6 +50,11 @@
         icon: 'i-lucide-plus',
         to: '/poll/new',
         class: 'p-2 border border-muted rounded-lg hover:border-inverted/50',
+      },
+      {
+        label: 'Accounts',
+        icon: 'i-lucide-user',
+        to: '/accounts',
       },
     ],
   ];
@@ -63,19 +80,6 @@
       onSelect: onLogout,
     },
   ]);
-
-  const profileItems: DropdownMenuItem[] = [
-    {
-      type: 'label',
-      label: 'Profile Actions',
-    },
-    {
-      label: 'Change Password',
-      onSelect() {
-        isChangePasswordModalOpen.value = true;
-      },
-    },
-  ];
 
   // footer 네비게이션 메뉴 아이템 정의
   const footerItems: NavigationMenuItem[] = [
