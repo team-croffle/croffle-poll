@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { db } from '~~/server/utils/db';
 
 export default defineEventHandler(async (event) => {
   const pollId = event.context.params?.id;
