@@ -1,5 +1,5 @@
 import { db } from '~~/server/utils/db';
-import { polls, pollOptions } from '~~/server/utils/schema';
+import { polls, pollOptions, users } from '~~/server/utils/schema';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
