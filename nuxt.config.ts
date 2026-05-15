@@ -8,8 +8,9 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
   colorMode: {
-    preference: 'dark', // 기본값 다크모드
+    preference: 'system', // 기본값 다크모드
     fallback: 'dark',
+    classSuffix: '',
   },
 
   runtimeConfig: {
