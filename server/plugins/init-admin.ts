@@ -22,10 +22,11 @@ export default defineNitroPlugin(async () => {
     }
 
     const config = useRuntimeConfig();
-    const { initEmail, password } = config.initAdmin;
+    const initEmail = config.initAdmin?.initEmail || process.env.INIT_ADMIN_EMAIL;
+    const password = config.initAdmin?.password || process.env.INIT_ADMIN_PASSWORD;
 
     if (!initEmail || !password) {
-      logger.warn('INIT_ADMIN_USERNAME or INIT_ADMIN_PASSWORD not set. Skipping initialization.');
+      logger.warn('INIT_ADMIN_EMAIL or INIT_ADMIN_PASSWORD not set. Skipping initialization.');
       return;
     }
 
