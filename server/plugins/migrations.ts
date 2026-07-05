@@ -13,7 +13,7 @@ export default defineNitroPlugin(async () => {
     console.log('⏳ Starting automatic database migrations...');
     // Dockerfile에서 복사해둔 drizzle 폴더의 물리적 경로를 지정합니다.
     const folder = path.resolve(process.cwd(), './drizzle');
-    
+
     await migrate(db, { migrationsFolder: folder });
     console.log('✅ Automatic database migrations completed');
   } catch (error) {
