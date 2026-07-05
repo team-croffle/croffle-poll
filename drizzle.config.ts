@@ -8,10 +8,10 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    host: process.env.PGHOST!,
-    port: Number(process.env.PGPORT!),
-    user: process.env.PGUSER!,
-    password: process.env.PGPASSWORD!,
-    database: process.env.PGDATABASE!
+    host: process.env.NUXT_DB_HOST!,
+    port: Number(process.env.NUXT_DB_PORT!),
+    user: process.env.NUXT_DB_USER!,
+    password: process.env.NUXT_DB_PASSWORD!,
+    database: process.env.NUXT_DB_DATABASE!
   },
 });
