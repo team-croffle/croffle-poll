@@ -31,3 +31,5 @@ logs
 
 # Yarn Canary
 .yarn/*
+# Local-only agent workspace
+.ai/

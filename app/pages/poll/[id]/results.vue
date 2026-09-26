@@ -30,7 +30,10 @@
   });
 
   const topVotesConsensus = computed<number>(() => {
-    if (!data.value || !topVotes.value || topVotes.value.length < 1) return 0;
+    if (!data.value || !topVotes.value || topVotes.value.length < 1) {
+      return 0;
+    }
+
     return (topVotes.value[0]!.count / data.value.totalVotes) * 100;
   });
 
