@@ -8,7 +8,7 @@
 
 * **다양한 투표 방식 (Timeline Selection)**: 일반적인 텍스트 투표 외에도 특정 날짜와 시간(Timeline)을 항목으로 제공하여, 팀 회식이나 모임 등 **약속 일정 잡기**에 최적화된 투표를 생성할 수 있습니다.
 * **직접 입력 지원**: 투표 생성자가 허용할 경우, 참여자가 기존 항목 외에 새로운 선택지를 직접 추가하여 투표할 수 있습니다.
-* **강력한 SSO 연동**: Authentik(OIDC) 기반의 안전한 로그인 및 자동 회원가입을 지원하며, Authentik 그룹 정보를 통해 관리자 권한이 자동 부여됩니다.
+* **강력한 SSO 연동**: 표준 OIDC 기반 로그인(Dex, Google, Authentik 등 어떤 IdP든 가능) 및 자동 회원가입을 지원하며, IdP 그룹 또는 관리자 이메일 목록을 통해 관리자 권한이 자동 부여됩니다.
 * **실시간 대시보드 및 결과 집계**: 투표 결과를 명확하고 아름다운 UI로 한눈에 확인할 수 있습니다.
 
 ---
@@ -43,12 +43,17 @@ yarn install
 DATABASE_URL=postgresql://<DB_USER>:<DB_PASSWORD>@localhost:5432/<DB_NAME>
 NUXT_SESSION_PASSWORD=minimum_32_characters_random_string
 
-# Authentik OAuth 설정
-NUXT_OAUTH_AUTHENTIK_CLIENT_ID=your-authentik-client-id
-NUXT_OAUTH_AUTHENTIK_CLIENT_SECRET=your-authentik-client-secret
-NUXT_OAUTH_AUTHENTIK_DOMAIN=your-authentik-domain
-AUTHENTIK_ADMIN_GROUP=your-authentik-admin-group
+# OIDC 설정 (전체 항목은 .env.example 참고)
+NUXT_OAUTH_OIDC_CLIENT_ID=your-oidc-client-id
+NUXT_OAUTH_OIDC_CLIENT_SECRET=your-oidc-client-secret
+NUXT_OAUTH_OIDC_OPENID_CONFIG=https://your-issuer/.well-known/openid-configuration
+NUXT_OIDC_SCOPE=openid profile email groups
+NUXT_OIDC_ADMIN_GROUPS=your-org:your-admin-team
+NUXT_OIDC_ADMIN_EMAILS=admin@example.com
+NUXT_PUBLIC_OIDC_PROVIDER_NAME=GitHub
 ```
+
+IdP에 등록할 Redirect(Callback) URI는 `https://<서비스 도메인>/auth/oidc` 입니다.
 
 ### 3. 데이터베이스 스키마 반영 (Drizzle)
 PostgreSQL 데이터베이스 인스턴스를 구동한 상태에서, 아래 명령을 통해 Drizzle 스키마 정의를 생성하고 반영합니다.
@@ -86,17 +91,31 @@ docker compose -f .docker/docker-compose.yaml up -d
 `.docker/docker-compose.yaml`을 구동할 때, 아래 환경 변수를 런타임에 주입하여 즉시 커스텀 초기화가 가능합니다.
 * `DATABASE_URL`: 연결할 PostgreSQL 주소
 * `NUXT_SESSION_PASSWORD`: 세션 암호화 토큰
-* `NUXT_OAUTH_AUTHENTIK_CLIENT_ID`: Authentik 클라이언트 ID
-* `NUXT_OAUTH_AUTHENTIK_CLIENT_SECRET`: Authentik 클라이언트 Secret
-* `NUXT_OAUTH_AUTHENTIK_DOMAIN`: Authentik 도메인 주소
-* `AUTHENTIK_ADMIN_GROUP`: 관리자 권한을 부여할 Authentik 그룹명
+* `NUXT_OAUTH_OIDC_CLIENT_ID`: OIDC 클라이언트 ID
+* `NUXT_OAUTH_OIDC_CLIENT_SECRET`: OIDC 클라이언트 Secret
+* `NUXT_OAUTH_OIDC_OPENID_CONFIG`: IdP의 Discovery 문서 URL (`.../.well-known/openid-configuration`)
+* `NUXT_OAUTH_OIDC_REDIRECT_URL`: (선택) 프록시 뒤에서 공개 URL을 감지하지 못할 때 지정하는 Callback URL
+* `NUXT_OIDC_SCOPE`: 요청할 scope, 공백 구분 (기본값 `openid profile email`)
+* `NUXT_OIDC_GROUPS_CLAIM`: 그룹 정보가 담긴 claim 이름 (기본값 `groups`)
+* `NUXT_OIDC_ADMIN_GROUPS`: 관리자 권한을 부여할 그룹명, 쉼표 구분
+* `NUXT_OIDC_ADMIN_EMAILS`: 관리자 권한을 부여할 이메일, 쉼표 구분
+* `NUXT_PUBLIC_OIDC_PROVIDER_NAME`: 로그인 버튼에 표시할 이름 (기본값 `SSO`)
 
 ---
 
-## 🔒 Authentik OIDC 연동 및 자동 회원가입
-로그인은 100% Authentik 기반의 OAuth 2.0 (OIDC)로 동작합니다.
-최초 로그인 시 데이터베이스에 유저가 없을 경우, Authentik의 프로필(이메일, 닉네임 등)을 기반으로 계정을 자동 생성(`auto-registration`)합니다.
-또한, Authentik에서 반환되는 그룹 정보를 파악하여, `AUTHENTIK_ADMIN_GROUP`으로 지정된 그룹에 속한 사용자는 어플리케이션 내에서 최고 관리자(`ADMIN`) 권한을 자동으로 부여받게 됩니다.
+## 🔒 OIDC 연동 및 자동 회원가입
+로그인은 표준 OAuth 2.0 / OpenID Connect(Authorization Code + PKCE)로 동작하며, Discovery 문서를 제공하는 IdP라면 환경 변수만 바꿔 교체할 수 있습니다.
+최초 로그인 시 데이터베이스에 유저가 없을 경우, IdP의 userinfo(이메일, 이름 등)를 기반으로 계정을 자동 생성(`auto-registration`)합니다.
+유저는 이메일로 식별되므로, IdP를 교체해도 같은 이메일이면 기존 계정이 유지됩니다. 이메일이 없거나 `email_verified=false`인 로그인은 거부됩니다.
+
+관리자(`ADMIN`) 권한은 로그인할 때마다 다시 계산되며, 아래 중 하나라도 해당하면 부여되고 아니면 `MEMBER`로 설정됩니다.
+* 이메일이 `NUXT_OIDC_ADMIN_EMAILS`에 포함됨
+* `NUXT_OIDC_GROUPS_CLAIM` claim에 `NUXT_OIDC_ADMIN_GROUPS`의 그룹이 포함됨
+
+IdP별 참고 사항:
+* **Dex (GitHub 커넥터)**: `NUXT_OIDC_SCOPE`에 `groups`를 추가하세요. 그룹은 `org` 또는 `org:team` 형태로 전달됩니다 (예: `team-croffle:admins`).
+* **Google**: `groups` scope와 그룹 claim을 지원하지 않으므로 `NUXT_OIDC_SCOPE`에서 `groups`를 빼고 `NUXT_OIDC_ADMIN_EMAILS`로 관리자를 지정하세요.
+* **Authentik**: `groups` scope 매핑을 사용하고, 기존 `AUTHENTIK_ADMIN_GROUP` 값을 `NUXT_OIDC_ADMIN_GROUPS`로 옮기세요.
 
 ---
 

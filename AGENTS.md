@@ -9,7 +9,7 @@ Read this file completely before touching any code.
 
 - **Framework**: Nuxt 4 (Vue 3, fullstack, Nitro `node-server` preset)
 - **UI**: Nuxt UI v4, Tailwind CSS v4, Lucide / Simple Icons via Iconify
-- **Auth**: `nuxt-auth-utils` with Authentik OIDC. Admin role is granted from the Authentik group named in `AUTHENTIK_ADMIN_GROUP`.
+- **Auth**: `nuxt-auth-utils` generic OIDC provider (`server/routes/auth/oidc.get.ts`), IdP-agnostic (currently Dex with GitHub, Google planned). Admin role is granted from `NUXT_OIDC_ADMIN_GROUPS` (groups claim) or `NUXT_OIDC_ADMIN_EMAILS`; see `server/utils/oidc.ts`.
 - **Database**: PostgreSQL via Drizzle ORM (`postgres` driver). Migrations live in `drizzle/` and run automatically on server start (`server/plugins/migrations.ts`).
 - **Validation / DTOs**: Zod schemas in `shared/dto/`.
 - **Package manager**: Yarn 4 (Berry, `nodeLinker: node-modules`). Always use `yarn`, never `npm` or `pnpm`.
