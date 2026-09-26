@@ -21,7 +21,17 @@ export default defineNuxtConfig({
       password: process.env.NUXT_DB_PASSWORD,
       database: process.env.NUXT_DB_DATABASE
     },
-    authentikAdminGroup: process.env.AUTHENTIK_ADMIN_GROUP,
+    // Provider-agnostic OIDC settings, overridable at runtime via NUXT_OIDC_* env vars.
+    // Client credentials and discovery URL live in `oauth.oidc` (NUXT_OAUTH_OIDC_*), owned by nuxt-auth-utils.
+    oidc: {
+      scope: 'openid profile email',
+      groupsClaim: 'groups',
+      adminGroups: '',
+      adminEmails: ''
+    },
+    public: {
+      oidcProviderName: 'SSO'
+    }
   },
   routeRules: {
     '/': { prerender: false },
