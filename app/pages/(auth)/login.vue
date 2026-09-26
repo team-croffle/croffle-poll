@@ -6,6 +6,7 @@
   });
 
   const { loggedIn } = useUserSession();
+  const providerName = useRuntimeConfig().public.oidcProviderName;
 
   // If already logged in, redirect to home
   onMounted(() => {
@@ -44,12 +45,12 @@
     <UCard class="w-full max-w-md rounded-2xl bg-white/3 p-4 shadow-lg shadow-black">
       <div class="flex flex-col gap-4 text-center">
         <p class="text-muted mb-4 text-sm">
-          Welcome! Please sign in with your Authentik account to continue.
+          Welcome! Please sign in with your {{ providerName }} account to continue.
         </p>
 
         <UButton
-          to="/auth/authentik"
-          label="Login with Authentik"
+          to="/auth/oidc"
+          :label="`Login with ${providerName}`"
           icon="i-lucide-log-in"
           variant="solid"
           class="from-primary-300 to-primary-500 relative w-full items-center justify-center bg-linear-to-r py-4 hover:shadow-lg"
